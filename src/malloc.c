@@ -245,14 +245,40 @@ void free(void *ptr)
 
 void *calloc( size_t nmemb, size_t size )
 {
-   // \TODO Implement calloc
-   return NULL;
+   void* ptr = malloc(nmemb * size);  // allocate memory for num*size bytes
+    if (ptr) 
+    {
+        // set all bytes to 0
+        memset(ptr, 0, nmemb * size);   
+    }
+    return ptr;
 }
 
 void *realloc( void *ptr, size_t size )
 {
-   // \TODO Implement realloc
-   return NULL;
+   if (ptr == NULL) 
+   {
+      // equivalent to malloc(size)
+      return malloc(size);
+   }
+   else if (size == 0) 
+   {
+      // equivalent to free(ptr)
+      free(ptr);
+      return NULL;
+    }
+    else 
+    {
+      void* new_ptr = malloc(size);
+      if (new_ptr) 
+      {
+         // copy data from old block to new block
+         memcpy(new_ptr, ptr, size);
+         // free old block
+         free(ptr);
+      }
+      return new_ptr;
+   }
 }
 
 
