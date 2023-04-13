@@ -51,23 +51,76 @@ struct _block
    struct _block *next;  /* Pointer to the next _block of allcated memory   */
    bool   free;          /* Is this _block free?                            */
    char   padding[3];    /* Padding: IENTRTMzMjAgU3ByaW5nIDIwMjM            */
+   int allocated;
 };
 
 
 struct _block *heapList = NULL; /* Free list to track the _blocks available */
 
-/*
- * \brief findFreeBlock
- *
- * \param last pointer to the linked list of free _blocks
- * \param size size of the _block needed in bytes 
- *
- * \return a _block that fits the request or NULL if no free _block matches
- *
- * \TODO Implement Next Fit
- * \TODO Implement Best Fit
- * \TODO Implement Worst Fit
+
+ /*brief findFreeBlock
+ 
+ param last pointer to the linked list of free _blocks
+ param size size of the _block needed in bytes 
+ 
+ return a _block that fits the request or NULL if no free _block matches
+
+ TODO Implement Next Fit
  */
+ Block* next_fit(size_t size) 
+ {
+    Block* head = NULL;      // head of free list
+    Block* last = NULL;      // last block searched in free list
+    Block* block = last;
+    do 
+    {
+        if (block->allocated == free && block->size >= size) 
+        {
+            last = block;
+            return block;
+        }
+        block = block->next != NULL ? block->next : head;
+    } while (block != last);
+    return NULL;
+}
+ //TODO Implement Best Fit
+ Block* best_fit(size_t size)
+ {
+   Block* best_block = NULL;
+   for (Block* block = BLOCK_HEADER; block != NULL; block = block -> next) 
+   {
+      if (block->allocated == free && block->size >= size) 
+      {
+         if (best_block == NULL || block -> size < best_block -> size) 
+         {
+            best_block = block;
+         }
+      }
+   }
+   return best_block;
+  }
+  int size = 0;
+  Block* block = best_fit(size + sizeof(block));
+  if (block == NULL) 
+  {
+      return NULL;  // allocation failed
+  }
+// TODO Implement Worst Fit
+Block* worst_fit(size_t size) 
+{
+    Block* worst_block = NULL;
+    for (Block* block = head; block != NULL; block = block->next) 
+    {
+        if (block->allocated == FREE && block->size >= size) 
+        {
+            if (worst_block == NULL || block->size > worst_block->size) 
+            {
+                worst_block = block;
+            }
+        }
+    }
+    return worst_block;
+}
 struct _block *findFreeBlock(struct _block **last, size_t size) 
 {
    struct _block *curr = heapList;
@@ -92,16 +145,73 @@ struct _block *findFreeBlock(struct _block **last, size_t size)
 // \TODO Put your Best Fit code in this #ifdef block
 #if defined BEST && BEST == 0
    /** \TODO Implement best fit here */
+    // split block if it's larger than needed
+    size_t size;
+    if (block->size >= size + sizeof(Block) + MIN_SIZE) 
+    {
+      Block* new_block = (Block*)((char*)block + size + sizeof(Block));
+      new_block->size = block->size - size - sizeof(Block);
+      new_block->allocated = FREE;
+      new_block->next = block->next;
+      block->size = size + sizeof(Block);
+      block->allocated = ALLOCATED;
+      block->next = new_block;
+    }
+    else 
+    {
+      block->allocated = ALLOCATED;
+    } 
 #endif
 
 // \TODO Put your Worst Fit code in this #ifdef block
 #if defined WORST && WORST == 0
    /** \TODO Implement worst fit here */
+   Block* block = worst_fit(size + sizeof(Block));
+    if (block == NULL) 
+    {
+        return NULL;  // allocation failed
+    }
+    // split block if it's larger than needed
+    if (block->size >= size + sizeof(Block) + MIN_SIZE) 
+    {
+        Block* new_block = (Block*)((char*)block + size + sizeof(Block));
+        new_block->size = block->size - size - sizeof(Block);
+        new_block->allocated = FREE;
+        new_block->next = block->next;
+        block->size = size + sizeof(Block);
+        block->allocated = ALLOCATED;
+        block->next = new_block;
+    }
+    else 
+    {
+        block->allocated = ALLOCATED;
+    }
 #endif
 
 // \TODO Put your Next Fit code in this #ifdef block
 #if defined NEXT && NEXT == 0
    /** \TODO Implement next fit here */
+   size_t size;
+    Block* block = next_fit(size + sizeof(Block));
+    if (block == NULL) 
+    {
+        return NULL;  // allocation failed
+    }
+    // split block if it's larger than needed
+    if (block->size >= size + sizeof(Block)) 
+    {
+        Block* new_block = (Block*)((char*)block + size + sizeof(Block));
+        new_block->size = block->size - size - sizeof(Block);
+        new_block->allocated = FREE;
+        new_block->next = block->next;
+        block->size = size + sizeof(Block);
+        block->allocated = ALLOCATED;
+        block->next = new_block;
+    }
+    else 
+    {
+        block->allocated = ALLOCATED;
+    }
 #endif
 
    return curr;
