@@ -94,48 +94,48 @@ struct _block *findFreeBlock(struct _block **last, size_t size)
    // split block if it's larger than needed
 
    curr = heapList;
-   int best_remainder = INT_MAX;
+   int best_remainder = INT_MAX; //Equating best remainder to the INT_MAX value
    struct _block *bestFit = NULL;
    while (curr != NULL)
    {
       if (curr->free && curr->size >= size)
       {
-         int remainder = (int)(curr->size - size);
+         int remainder = (int)(curr->size - size); //Calculating remainder
 
-         if (remainder < best_remainder)
+         if (remainder < best_remainder) //Comparing remainder and best remainder
          {
-            bestFit = curr;
-            best_remainder = remainder;
+            bestFit = curr; //If less, set curr as best Fit
+            best_remainder = remainder; // set remainder to best remainder
          }
       }
       *last = curr;
       curr = curr->next;
    }
-   curr = bestFit;
+   curr = bestFit; //set best Fit to curr for next iteration.
 #endif
 
 // \TODO Put your Worst Fit code in this #ifdef block
 #if defined WORST && WORST == 0
    /** \TODO Implement worst fit here */
    curr = heapList;
-   int worst_remainder = INT_MIN;
+   int worst_remainder = INT_MIN; //Equating worst remainder to INT_MIN
    struct _block *worstFit = NULL;
    while (curr != NULL)
    {
       if (curr->free && curr->size >= size)
       {
-         int remainder = (int)(curr->size - size);
+         int remainder = (int)(curr->size - size); // Calculating remainder
 
-         if (remainder > worst_remainder)
+         if (remainder > worst_remainder) //Comparing remainder and worst remainder
          {
-            worstFit = curr;
-            worst_remainder = remainder;
+            worstFit = curr; // If more then set curr to worstFit
+            worst_remainder = remainder; // set remainder to worst remainder
          }
       }
       *last = curr;
       curr = curr->next;
    }
-   curr = worstFit;
+   curr = worstFit; //set worst fit to curr for next iteration.
 
 #endif
 
@@ -147,20 +147,20 @@ struct _block *findFreeBlock(struct _block **last, size_t size)
    struct _block *nextFit = NULL;
    while (curr != NULL)
    {
-      if (curr->free && curr->size >= size)
+      if (curr->free && curr->size >= size) //if curr is free and the size of it is more or equal to mem size
       {
-         nextFit = curr;
+         nextFit = curr; //Set curr to nextFit
          break;
       }
-      *last = curr;
-      curr = curr->next;
+      *last = curr; // set curr to the last element
+      curr = curr->next; //Set next element to curr
       if (!curr && *last)
       {
-         curr = heapList;
-         *last = NULL;
+         curr = heapList; //set heaplist/header to curr
+         *last = NULL; //make last element null
       }
 
-      curr = nextFit;
+      curr = nextFit; //set nextFit equal to curr for next iteration
    }
 #endif
 
@@ -260,10 +260,10 @@ void *malloc(size_t size)
       if (next->size > sizeof(struct _block) + 4)
       {
          struct _block *newBlock = (struct _block *)((long int)next + (int)size + (int)sizeof(struct _block));
-         newBlock->size = next->size - size - sizeof(struct _block);
-         newBlock->next = next->next;
-         newBlock->free = true;
-         newBlock->allocated = 0;
+         newBlock->size = next->size - size - sizeof(struct _block); // Calculating size of newBlock
+         newBlock->next = next->next; //Setting next element to the next pointer
+         newBlock->free = true; //Setting free to true since newBlock is free now
+         newBlock->allocated = 0; //Hence allocated will be 0
          // adjust the size of the original block
          next->size = size;
          next->next = newBlock;
@@ -272,7 +272,7 @@ void *malloc(size_t size)
       }
    }
    // update statistics
-   num_splits++;
+   num_splits++; 
    num_blocks++;
 
    /* Could not find free _block, so grow heap */
@@ -317,24 +317,24 @@ void free(void *ptr)
    curr->free = true;
    if (curr->free == 0)
    {
-      return;
+      return NULL;
    }
-   curr->allocated = 0;
-   num_frees++;
+   curr->allocated = 0; //Setting allocated equal to 0 since curr is free now.
+   num_frees++; //Incrementing num_frees variable
 
    /* TODO: Coalesce free _blocks.  If the next block or previous block
             are free then combine them with this block being freed.
    */
-   curr = heapList;
+   curr = heapList; //Setting heapList/header to curr
    while (curr && curr->next)
    {
       if (curr->free && curr->next->free)
       {
-         curr->size += sizeof(struct _block) + curr->next->size;
-         curr->next = curr->next->next;
-         num_coalesces++;
+         curr->size += sizeof(struct _block) + curr->next->size; //Calculating size of curr
+         curr->next = curr->next->next; //Storing the element in next to next pointer of curr in next pointer of curr.
+         num_coalesces++; //Incrementing num_coalesces variable
       }
-      curr = curr->next;
+      curr = curr->next; //Setting value in next pointer of curr to curr for next iteration.
    }
 }
 
