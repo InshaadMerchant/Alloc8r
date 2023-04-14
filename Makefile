@@ -10,6 +10,7 @@ TESTS=		tests/test1 \
                 tests/test2 \
                 tests/test3 \
                 tests/test4 \
+				tests/test5 \
                 tests/bfwf \
                 tests/ffnf \
                 tests/realloc \
