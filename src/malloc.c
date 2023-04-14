@@ -51,6 +51,7 @@ struct _block
    struct _block *next;  /* Pointer to the next _block of allcated memory   */
    bool   free;          /* Is this _block free?                            */
    char   padding[3];    /* Padding: IENTRTMzMjAgU3ByaW5nIDIwMjM            */
+   int allocated;
 };
 
 
@@ -92,7 +93,7 @@ struct _block *findFreeBlock(struct _block **last, size_t size)
 #if defined BEST && BEST == 0
    /** \TODO Implement best fit here */
     // split block if it's larger than needed
-    struct _block *findFreeBlock(struct _block **last, size_t size)
+    struct _block *bestFit(struct _block **last, size_t size)
     {
       struct _block *curr = heapList;
       struct _block *bestFit = NULL;
@@ -115,7 +116,7 @@ struct _block *findFreeBlock(struct _block **last, size_t size)
 // \TODO Put your Worst Fit code in this #ifdef block
 #if defined WORST && WORST == 0
    /** \TODO Implement worst fit here */
-   struct _block *findFreeBlock(struct _block **last, size_t size)
+   struct _block *worstFit(struct _block **last, size_t size)
    {
       struct _block *curr = heapList;
       struct _block *worstFit = NULL;
@@ -138,7 +139,7 @@ struct _block *findFreeBlock(struct _block **last, size_t size)
 // \TODO Put your Next Fit code in this #ifdef block
 #if defined NEXT && NEXT == 0
    /** \TODO Implement next fit here */
-    struct _block *findFreeBlock(struct _block **last, size_t size)
+    struct _block *nextFit(struct _block **last, size_t size)
     {
       struct _block *curr = *last ? (*last)->next : heapList;
       struct _block *nextFit = NULL;
@@ -247,12 +248,30 @@ void *malloc(size_t size)
    struct _block *last = heapList;
    struct _block *next = findFreeBlock(&last, size);
 
-   /* TODO: If the block found by findFreeBlock is larger than we need then:
-            If the leftover space in the new block is greater than the sizeof(_block)+4 then
-            split the block.
-            If the leftover space in the new block is less than the sizeof(_block)+4 then
-            don't split the block.
-   */
+    //TODO: If the block found by findFreeBlock is larger than we need then:
+    if(_block->size < size + sizeof(struct _block))
+    {
+      return block;
+    }  
+    //If the leftover space in the new block is greater than the sizeof(_block)+4 then
+    //split the block.
+    //If the leftover space in the new block is less than the sizeof(_block)+4 then
+    //don't split the block.
+   struct _block *newBlock = (struct _block *)((char*)block + size + sizeof(struct _block));
+   newBlock->size = block->size - size - sizeof(struct _block);
+   newBlock->next = block->next;
+   newBlock->free = true;
+   newBlock->allocated = 0;
+   
+   // adjust the size of the original block
+   block->size = size;
+   block->next = newBlock;
+   block->free = false;
+   block->allocated = 1;
+   
+   // update statistics
+   num_splits++;
+   num_blocks++;
 
    /* Could not find free _block, so grow heap */
    if (next == NULL) 
@@ -294,10 +313,27 @@ void free(void *ptr)
    struct _block *curr = BLOCK_HEADER(ptr);
    assert(curr->free == 0);
    curr->free = true;
-
+   if (curr->free == 0) 
+   {
+        return;
+   }
+   curr->allocated = 0;
+   num_frees++;
+   *last = NULL;
    /* TODO: Coalesce free _blocks.  If the next block or previous block 
             are free then combine them with this block being freed.
    */
+   curr = heapList;
+    while (curr && curr->next) 
+    {
+        if (curr->free && curr->next->free) 
+        {
+            curr->size += sizeof(struct _block) + curr->next->size;
+            curr->next = curr->next->next;
+            num_coalesces++;
+        }
+        curr = curr->next;
+    }
 }
 
 void *calloc( size_t nmemb, size_t size )
